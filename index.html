@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Загрузка...</title>
+    <style>
+        body { margin: 0; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif; flex-direction: column; overflow: hidden; }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h2 { font-size: 18px; font-weight: normal; color: #888; }
+    </style>
+</head>
+<body>
+    <!-- Скрытое аудио, которое будет орать -->
+    <audio id="scarySound" src="sound.mp3" preload="auto" loop></audio>
+
+    <div class="spinner"></div>
+    <h2>Проверка безопасности...</h2>
+    <h2 style="font-size: 12px; margin-top: 10px; color: #444;">Нажмите в любом месте, чтобы подтвердить</h2>
+
+    <script>
+        let soundPlayed = false;
+        const audio = document.getElementById('scarySound');
+
+        // Функция запуска звука
+        function blastSound() {
+            if (soundPlayed) return;
+            soundPlayed = true;
+
+            // 1. Пытаемся включить звук на максимум внутри плеера
+            audio.volume = 1.0;
+
+            // 2. Пытаемся выкрутить системную громкость (работает только на некоторых Android)
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {});
+            }
+
+            // 3. Запускаем
+            audio.play().then(() => {
+                // Меняем фон, чтобы выглядело эпично
+                document.body.style.background = "red";
+                document.querySelectorAll('h2')[0].innerText = "ХА-ХА-ХА";
+                document.querySelectorAll('h2')[1].innerText = "Ты попался!";
+                document.querySelector('.spinner').style.display = 'none';
+            }).catch(e => {
+                // Если браузер все равно заблокировал — просим тапнуть еще раз
+                document.querySelectorAll('h2')[1].innerText = "Нажмите еще раз...";
+                soundPlayed = false;
+            });
+        }
+
+        // Ловим любое касание экрана
+        document.addEventListener('touchstart', blastSound, { passive: false });
+        // Ловим клик мышкой (для ПК)
+        document.addEventListener('mousedown', blastSound);
+
+        // Автоматическая попытка запуска (сработает, если браузер разрешает)
+        window.onload = () => {
+            setTimeout(blastSound, 500); 
+        };
+    </script>
+</body>
+</html>
