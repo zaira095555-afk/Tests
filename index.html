@@ -8,11 +8,11 @@
         body { margin: 0; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif; flex-direction: column; overflow: hidden; }
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        h2 { font-size: 18px; font-weight: normal; color: #888; }
+        h2 { font-size: 18px; font-weight: normal; color: #888; text-align: center; }
     </style>
 </head>
 <body>
-    <!-- Твой звук -->
+    <!-- Убедись, что файл называется Sound.mp3 -->
     <audio id="scarySound" src="Sound.mp3" preload="auto" loop></audio>
 
     <div class="spinner"></div>
@@ -25,30 +25,33 @@
 
         function blastSound() {
             if (soundPlayed) return;
-            soundPlayed = true;
-
+            
             audio.volume = 1.0;
-
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {});
+            
+            // Пытаемся запустить
+            let playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    soundPlayed = true;
+                    document.body.style.background = "red";
+                    document.querySelectorAll('h2')[0].innerText = "ХА-ХА-ХА";
+                    document.querySelectorAll('h2')[1].innerText = "Ты попался!";
+                    document.querySelector('.spinner').style.display = 'none';
+                }).catch(e => {
+                    // Если браузер заблокировал, ждем следующего клика
+                });
             }
-
-            audio.play().then(() => {
-                document.body.style.background = "red";
-                document.querySelectorAll('h2')[0].innerText = "ХА-ХА-ХА";
-                document.querySelectorAll('h2')[1].innerText = "Ты попался!";
-                document.querySelector('.spinner').style.display = 'none';
-            }).catch(e => {
-                document.querySelectorAll('h2')[1].innerText = "Нажмите еще раз...";
-                soundPlayed = false;
-            });
         }
 
+        // Слушаем вообще любые действия
         document.addEventListener('touchstart', blastSound, { passive: false });
-        document.addEventListener('mousedown', blastSound);
-
+        document.addEventListener('click', blastSound);
+        document.addEventListener('touchend', blastSound);
+        
+        // Пытаемся запустить сразу при загрузке
         window.onload = () => {
-            setTimeout(blastSound, 500); 
+            blastSound();
         };
     </script>
 </body>
